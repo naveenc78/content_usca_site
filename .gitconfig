@@ -1,0 +1,6 @@
+# This is Git's per-user configuration file.
+[user]
+# Please adapt and uncomment the following lines:
+	name = Naveen Chandran
+	email = chandran.naveen@gmail.com
+        token = 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
