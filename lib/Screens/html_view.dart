@@ -40,9 +40,12 @@ class _IframeViewState extends State<IframeView> {
 
   @override
   Widget build(BuildContext context) {
+    //print(widget.source);
     return Container(
         width: widget.width,
         height: widget.height,
+        alignment: Alignment.topCenter,
+        margin: const EdgeInsets.all(5.0),
         child: HtmlElementView(
           key: UniqueKey(),
           viewType: widget.source,

@@ -1,7 +1,11 @@
 import 'dart:core';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/foundation.dart';
+
+const baseStorageUrl =
+    'https://mywebapp-140fd.appspot.com.storage.googleapis.com/';
 
 class StorageService extends ChangeNotifier {
   final logger = Logger(
@@ -22,6 +26,8 @@ class StorageService extends ChangeNotifier {
   List<firebase_storage.Reference>? _currentitems;
   firebase_storage.Reference? _currentitem;
   String _currentdownloadurl = '';
+  bool inProgress = false;
+  int _selectedindex = 0;
 
   StorageService() {
     initialize();
@@ -41,15 +47,26 @@ class StorageService extends ChangeNotifier {
     _currentitems = null;
     _currentitem = null;
     _currentdownloadurl = '';
+    _selectedindex = 0;
+  }
+
+  bool isOperationInProgress() {
+    return inProgress;
+  }
+
+  int getSelectedIndex() {
+    return _selectedindex;
   }
 
   //set reference - you can set this any number of times - this will refresh its
   // children and notify listeners
-  void setReference(String base) async {
+  void setReference(String base, {String itemID = ''}) async {
+    inProgress = true;
     logger.d("SetReference called with: " + base);
     //check if same ref
     if (_base == base) {
       logger.d("Reference already at " + base);
+      inProgress = false;
       return; // reference previously set
     }
 
@@ -58,6 +75,7 @@ class StorageService extends ChangeNotifier {
     resetcurrentcontent();
     if (_currentref == null) {
       logger.d("Storage refernece not found: " + base);
+      inProgress = false;
       notifyListeners();
       return;
     }
@@ -67,6 +85,7 @@ class StorageService extends ChangeNotifier {
 
     if (_currentcontents == null) {
       logger.d("Found no contents");
+      inProgress = false;
       notifyListeners();
       return;
     }
@@ -75,36 +94,51 @@ class StorageService extends ChangeNotifier {
       logger.d("Found no directories");
       if (_currentcontents!.items.isEmpty) {
         logger.d("Found no items");
+        inProgress = false;
         notifyListeners();
         return;
       }
     }
 
-    logger.d("SerReference found contents");
     _currentcategories = _currentcontents!.prefixes;
-    if (_currentcategories != null) {
-      for (int i = 0; i < _currentcategories!.length; i++) {
-        logger.d("Found directory: " + _currentcategories![i].fullPath);
-      }
-    }
-
     _currentitems = _currentcontents!.items;
     if (_currentitems == null) {
       logger.d("Found no items");
+      inProgress = false;
       notifyListeners();
       return;
     }
 
-    for (int i = 0; i < _currentitems!.length; i++) {
-      logger.d("Found item: " + _currentitems![i].fullPath);
+    // if item ID is passed then check through the list and select if found
+    if (itemID.isNotEmpty) {
+      logger.d('Finding item: ' + itemID);
+      String checkitemID = itemID.replaceAll(' ', '');
+      String checkagainst = '';
+      for (int i = 0; i < _currentitems!.length; i++) {
+        checkagainst = _currentitems![i].name.replaceAll(' ', '');
+        logger.d(checkagainst);
+        if (checkagainst
+            .split('.')[0]
+            .toLowerCase()
+            .contains(checkitemID.toLowerCase())) {
+          logger.d("Found item: " + _currentitems![i].fullPath);
+          _currentitem = _currentitems![i];
+          _selectedindex = i;
+          break;
+        }
+      }
+    } else {
+      // select the first item
+      _currentitem = _currentitems![0];
+      _selectedindex = 0;
     }
 
-    _currentitem = _currentitems![0];
     _currentdownloadurl = '';
     if (_currentitem != null) {
       logger.d("Selected item: " + _currentitem!.fullPath);
     }
 
+    inProgress = false;
     notifyListeners();
   }
 
@@ -126,6 +160,7 @@ class StorageService extends ChangeNotifier {
 
   // set a selected item
   void setSelectedItem(int index) {
+    _selectedindex = index;
     if (_currentitems == null) return;
     //if item already selected
     if (_currentitem == _currentitems!.elementAt(index)) return;
@@ -157,6 +192,12 @@ class StorageService extends ChangeNotifier {
   Future<String> fetchCurrentDownloadUrl() async {
     if (_currentitem == null) return '';
     _currentdownloadurl = await _currentitem!.getDownloadURL();
+    return _currentdownloadurl;
+  }
+
+  String composeDownloadUrl() {
+    if (_currentitem == null) return '';
+    _currentdownloadurl = baseStorageUrl + _currentitem!.fullPath;
     return _currentdownloadurl;
   }
 }

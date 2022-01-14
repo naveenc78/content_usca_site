@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "mywebapp-140fd"
+  },
+  "targets": {
+    "mywebapp-140fd": {
+      "hosting": {
+        "prod": [
+          "mywebapp-140fd"
+        ]
+      }
+    }
   }
 }

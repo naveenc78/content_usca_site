@@ -1,10 +1,9 @@
 import 'dart:core';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:content_example/Services/storage_service.dart';
 import 'package:content_example/Screens/html_view.dart';
-import 'package:content_example/Screens/pdf_view.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ContentDetail extends StatelessWidget {
   const ContentDetail({Key? key}) : super(key: key);
@@ -30,10 +29,19 @@ class ContentDetail extends StatelessWidget {
                             fit: BoxFit.fitWidth,
                             image: AssetImage('assets/images/cmc.png')))))
         : (contents.getCurrentDownloadUrl().isEmpty)
-            ? (contents.getCurrentItem()!.name.endsWith('.pdf') == true)
-                ? FutureBuilder(
-                    future: contents.getCurrentItem()!.getData(),
-                    builder: (context, AsyncSnapshot<Uint8List?> snapshot) {
+            ? (contents.getCurrentItem()!.name.endsWith('.html') == true)
+                ? Center(
+                    // child: Row(children: <Widget>[
+                    // SizedBox(width: .1.sw),
+                    // Expanded(
+                    child: IframeView(
+                        source: contents.composeDownloadUrl(),
+                        width: width,
+                        height: height))
+                // ]))
+                : FutureBuilder(
+                    future: contents.fetchCurrentDownloadUrl(),
+                    builder: (context, AsyncSnapshot<String> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         if (snapshot.hasError) {
                           return Center(
@@ -41,21 +49,21 @@ class ContentDetail extends StatelessWidget {
                                   style:
                                       Theme.of(context).textTheme.bodyText1));
                         } else {
-                          return Pdfview(
-                              name: contents.getCurrentItem()!.name,
-                              source: snapshot.data!,
-                              width: width,
-                              height: height);
+                          //print('PDF');
+                          return Center(
+                              //   child: Row(children: <Widget>[
+                              // SizedBox(width: .1.sw),
+                              // Expanded(
+                              child: IframeView(
+                                  source: snapshot.data!,
+                                  width: width,
+                                  height: height));
+                          //]));
                         }
                       }
 
                       return const Center(child: CircularProgressIndicator());
                     })
-                : Center(
-                    child: IframeView(
-                        source: contents.composeDownloadUrl(),
-                        width: width,
-                        height: height))
             : Center(
                 // child: Row(children: <Widget>[
                 // SizedBox(width: 0.1.sw),
@@ -67,21 +75,6 @@ class ContentDetail extends StatelessWidget {
     //]));
   }
 }
-
-//                            return Expanded(
-//         child: SingleChildScrollView(
-//       scrollDirection: Axis.vertical,
-//       controller: _scrollController,
-//       child: Padding(
-//         padding: const EdgeInsets.fromLTRB(4.0, 20.0, 20.0, 10.0),
-// //        child: ConstrainedBox(
-// //          constraints:
-// //              BoxConstraints(maxHeight: widgetheight, maxWidth: widgetwidth),
-// //          child: Column(
-// //            mainAxisAlignment: MainAxisAlignment.start,
-// //            crossAxisAlignment: CrossAxisAlignment.stretch,
-// //            children: <Widget>[
-// //              Flexible(
 
 // Sample template widgets for future use
                  // return showdetail(
@@ -114,6 +107,30 @@ class ContentDetail extends StatelessWidget {
 
   //   return const Center(child: Text('Ooo - really close. Stay Tuned!'));
     //for all other files return this
-   
+//     return Expanded(
+//         child: SingleChildScrollView(
+//       scrollDirection: Axis.vertical,
+//       controller: _sc6rollController,
+//       child: Padding(
+//         padding: const EdgeInsets.fromLTRB(4.0, 20.0, 20.0, 10.0),
+// //        child: ConstrainedBox(
+// //          constraints:
+// //              BoxConstraints(maxHeight: widgetheight, maxWidth: widgetwidth),
+// //          child: Column(
+// //            mainAxisAlignment: MainAxisAlignment.start,
+// //            crossAxisAlignment: CrossAxisAlignment.stretch,
+// //            children: <Widget>[
+// //              Flexible(
+//         child: EasyWebView(
+//             src: itemurl,
+//             onLoaded: () {
+//               log.d('Web View loaded');
+//             }),
+//         //             ),
+//         //           ],
+//         //         ),
+// //        ),
+//       ),
+//     ));
   // }
 
